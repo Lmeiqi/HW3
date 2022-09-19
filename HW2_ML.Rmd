@@ -1,0 +1,96 @@
+---
+title: "HW2"
+author: "Meiqi Liu"
+date: "2022-09-09"
+output: html_document
+---
+
+# HW2: Class One Survey Analysis
+
+## **INSTRUCTIONS**
+
+### Please complete tasks 1-7 using reproducible coding practices. Use R syntax to solve all problems (i.e. do not manually change values/variables in datasets or check them manually to make sure things are correct except as a double or triple check). Please cut and paste each problem before each R markdown chunk and annotate your code within the chunks.
+
+### 1. Import class one survey data from our Github site (https://github.com/kijohnson/ADA) (The dataset is called ‘Class 1 Survey Fall 2022.csv’), calling the R dataframe that you create C1survey.
+
+```{r, chunk1}
+library(readr)
+pacman::p_load(readr, dplyr)
+C1survey<-read.csv("https://raw.githubusercontent.com/kijohnson/ADA/master/Class%201%20Survey%20Fall%202022.csv")
+```
+
+### 2. Determine: a. the number of observations (i.e. the number of people who filled out the survey) and b. the number of variables in the dataframe.
+
+```{r, chunk2}
+dim(C1survey)
+# there are 42 observations and 27 variables
+```
+
+### 3. a. Rename the column variables to something shorter and that is descriptive of what the variable is about (for example like_dogs for the ‘Do you like dogs?’ question variable) and b. Display that they are renamed.
+
+```{r, chunk3}
+names(C1survey)[1:27]<-c("id","like_cats","like_dogs","item_desert","slogan","fav_day","bird","fav_food","fav_drink","fav_season","fav_month","hobby","program","specialization","sta_software","R_exp","coding_comf","coding_length","top_three","interest","fav_num","birth_day","birth_month","country","state","city","high_educ")
+colnames(C1survey)
+```
+
+### 4. Write code to determine and display the number of factor, integer, numerical, and character variables there are in the C1survey dataset.
+
+```{r, chunk4}
+sapply(C1survey, class)
+table(sapply(C1survey, class))
+# there are 23 character and 4 numeric
+```
+
+### 5. a. Using code, check the bday and bmonth variables for any unusual or missing values. If you find any, b. describe what you will do with the unusual values in a comment before or immediately following the code that does it, and c. after you have cleaned up any unusual values, find the median bday and month. *Note: please make sure that your bday and month variables are numeric before doing statistics
+
+```{r, chunk5}
+# a.check birth_day and birth_month
+C1survey$birth_day
+C1survey$birth_month
+
+# b.change dates in different forms into the correct form
+# bith_day
+C1survey$birth_day[C1survey$birth_day=='June 8th']<-8
+C1survey$birth_day[C1survey$birth_day=='13-Aug-97']<-13
+# birth_month
+C1survey$birth_month[C1survey$birth_month=='October']<-10
+C1survey$birth_month[C1survey$birth_month=='June 8th, 1998']<-6
+C1survey$birth_month[C1survey$birth_month=='August']<-8
+C1survey$birth_month[C1survey$birth_month=='March']<-3
+# change the type
+class(C1survey$birth_day)
+C1survey$birth_day<-as.numeric(as.character(C1survey$birth_day))
+class(C1survey$birth_day)
+
+class(C1survey$birth_month)
+C1survey$birth_month<-as.numeric(as.character(C1survey$birth_month))
+class(C1survey$birth_month)
+
+# c. median birth_day and birth_month
+median(C1survey$birth_day,na.rm = TRUE)
+median(C1survey$birth_month,na.rm = TRUE)
+# the median birth day is 15 and the median birth month is 7.
+```
+
+### 6. a. Create a new variable called bseason that gives the season according to Northern Meteorological season in which respondents were born (winter=12/1 to 2/29, spring=3/1 to 5/31, summer=6/1 to 8/31, fall=9/1 to 11/30). b. Using the table function, print a table of Seasons in the columns and bmonths in the rows that allows you to check that the coding is correct c. Sum the columns using the addmargins function to answer the question of how many classmates were born in each season? Include your answer in the code.
+
+```{r, chunk6}
+# a.create bseason
+C1survey<-C1survey %>% 
+  mutate(bseason=case_when(C1survey$birth_month<3 | C1survey$birth_month==12 ~ 'winter',
+                             C1survey$birth_month>2 & C1survey$birth_month<6 ~ 'spring',
+                                C1survey$birth_month>5 & C1survey$birth_month<9 ~ 'summer',
+                                  C1survey$birth_month>8 & C1survey$birth_month<12 ~ 'fall'))
+C1survey$bseason
+C1survey$bseason<-as.factor(C1survey$bseason)
+
+# b.table check
+table(C1survey$birth_month, C1survey$bseason)
+
+# c.
+table_sum<-addmargins(table(C1survey$birth_month, C1survey$bseason),1, FUN=sum)
+table_sum
+#there are 11 classmates born in fall, 8 in spring, 13 in summer, 9 in winter
+```
+
+### 7. Pick your favorite variable to analyze, come up with a question you want to answer with that variable, generate the code, and provide an answer to your question. Describe what you did using comments (i.e. #’s).
